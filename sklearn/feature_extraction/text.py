@@ -47,7 +47,7 @@ __all__ = [
 ]
 
 
-def _preprocess(doc, accent_function=None, lower=False):
+def _preprocess(doc, accent_function=None, lower=False, lowercase_after_accent_functions=False):
     """Chain together an optional series of text preprocessing steps to
     apply to a document.
 
@@ -70,6 +70,8 @@ def _preprocess(doc, accent_function=None, lower=False):
         doc = doc.lower()
     if accent_function is not None:
         doc = accent_function(doc)
+    if lowercase_after_accent_functions:
+        doc = doc.lower()
     return doc
 
 
@@ -334,7 +336,7 @@ class _VectorizerMixin:
                 'Invalid value for "strip_accents": %s' % self.strip_accents
             )
 
-        return partial(_preprocess, accent_function=strip_accents, lower=self.lowercase)
+        return partial(_preprocess, accent_function=strip_accents, lower=self.lowercase, lowercase_after_accent_functions=self.lowercase_after_accent_functions)
 
     def build_tokenizer(self):
         """Return a function that splits a string into a sequence of tokens.
@@ -629,6 +631,13 @@ class HashingVectorizer(TransformerMixin, _VectorizerMixin, BaseEstimator):
     lowercase : bool, default=True
         Convert all characters to lowercase before tokenizing.
 
+    lowercase_after_accent_functions : bool, default=True
+        Convert all characters to lowercase after calling the accent_functions
+        and before tokenizing. This could avoid issues when special characters
+        present in the input, for example, the trademark symbol TM. If it
+        is False, the trademark symbol will be in uppercase TM in this case.
+        Otherwise, it will be in lowercase tm.
+
     preprocessor : callable, default=None
         Override the preprocessing (string transformation) stage while
         preserving the tokenizing and n-grams generation steps.
@@ -732,6 +741,7 @@ class HashingVectorizer(TransformerMixin, _VectorizerMixin, BaseEstimator):
         decode_error="strict",
         strip_accents=None,
         lowercase=True,
+        lowercase_after_accent_functions=True,
         preprocessor=None,
         tokenizer=None,
         stop_words=None,
@@ -752,6 +762,7 @@ class HashingVectorizer(TransformerMixin, _VectorizerMixin, BaseEstimator):
         self.tokenizer = tokenizer
         self.analyzer = analyzer
         self.lowercase = lowercase
+        self.lowercase_after_accent_functions = lowercase_after_accent_functions
         self.token_pattern = token_pattern
         self.stop_words = stop_words
         self.n_features = n_features
@@ -929,6 +940,13 @@ class CountVectorizer(_VectorizerMixin, BaseEstimator):
     lowercase : bool, default=True
         Convert all characters to lowercase before tokenizing.
 
+    lowercase_after_accent_functions : bool, default=True
+        Convert all characters to lowercase after calling the accent_functions
+        and before tokenizing. This could avoid issues when special characters
+        present in the input, for example, the trademark symbol TM. If it
+        is False, the trademark symbol will be in uppercase TM in this case.
+        Otherwise, it will be in lowercase tm.
+
     preprocessor : callable, default=None
         Override the preprocessing (strip_accents and lowercase) stage while
         preserving the tokenizing and n-grams generation steps.
@@ -1094,6 +1112,7 @@ class CountVectorizer(_VectorizerMixin, BaseEstimator):
         decode_error="strict",
         strip_accents=None,
         lowercase=True,
+        lowercase_after_accent_functions=True,
         preprocessor=None,
         tokenizer=None,
         stop_words=None,
@@ -1115,6 +1134,7 @@ class CountVectorizer(_VectorizerMixin, BaseEstimator):
         self.tokenizer = tokenizer
         self.analyzer = analyzer
         self.lowercase = lowercase
+        self.lowercase_after_accent_functions = lowercase_after_accent_functions
         self.token_pattern = token_pattern
         self.stop_words = stop_words
         self.max_df = max_df
@@ -1749,6 +1769,13 @@ class TfidfVectorizer(CountVectorizer):
     lowercase : bool, default=True
         Convert all characters to lowercase before tokenizing.
 
+    lowercase_after_accent_functions : bool, default=True
+        Convert all characters to lowercase after calling the accent_functions
+        and before tokenizing. This could avoid issues when special characters
+        present in the input, for example, the trademark symbol TM. If it
+        is False, the trademark symbol will be in uppercase TM in this case.
+        Otherwise, it will be in lowercase tm.
+
     preprocessor : callable, default=None
         Override the preprocessing (string transformation) stage while
         preserving the tokenizing and n-grams generation steps.
@@ -1921,6 +1948,7 @@ class TfidfVectorizer(CountVectorizer):
         decode_error="strict",
         strip_accents=None,
         lowercase=True,
+        lowercase_after_accent_functions=True,
         preprocessor=None,
         tokenizer=None,
         analyzer="word",
@@ -1945,6 +1973,7 @@ class TfidfVectorizer(CountVectorizer):
             decode_error=decode_error,
             strip_accents=strip_accents,
             lowercase=lowercase,
+            lowercase_after_accent_functions=lowercase_after_accent_functions,
             preprocessor=preprocessor,
             tokenizer=tokenizer,
             analyzer=analyzer,
