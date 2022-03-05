@@ -3,12 +3,12 @@ import pytest
 
 from sklearn.datasets import make_blobs
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils._testing import assert_array_almost_equal
 from sklearn.utils._testing import assert_almost_equal
-
 
 def test_compute_class_weight():
     # Test (and demo) compute_class_weight.
@@ -38,7 +38,6 @@ def test_compute_class_weight_not_present():
         compute_class_weight("balanced", classes=classes, y=y)
     with pytest.raises(ValueError):
         compute_class_weight({0: 1.0, 1: 2.0}, classes=classes, y=y)
-
 
 def test_compute_class_weight_dict():
     classes = np.arange(3)
@@ -261,3 +260,9 @@ def test_compute_sample_weight_more_than_32():
     indices = np.arange(50)  # use subsampling
     weight = compute_sample_weight("balanced", y, indices=indices)
     assert_array_almost_equal(weight, np.ones(y.shape[0]))
+
+def test_extra_class_weight_labels():
+    # No error if extraneous class lebels are present
+    rfc = RandomForestClassifier(class_weight={1:10, 0:1})
+    rfc.fit([[0, 0, 1], [1, 0, 1]], [0, 0])
+
