@@ -4,7 +4,7 @@ import pytest
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 
 
-def test_1():
+def test_laacFalse_withTrademark():
     x = ['This is Problematic™.','THIS IS NOT']
 
     cv = CountVectorizer(
@@ -22,7 +22,7 @@ def test_1():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_2():
+def test_laacTrue_withTrademark():
     x = ['This is Problematic™.','THIS IS NOT']
 
     cv = CountVectorizer(
@@ -40,7 +40,7 @@ def test_2():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_3():
+def test_laacTrue_withoutTrademark():
     x = ['This is ProblematicTM.','THIS IS NOT']
 
     cv = CountVectorizer(
@@ -58,7 +58,7 @@ def test_3():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_4():
+def test_laacFalse_withoutTrademark():
     x = ['This is ProblematicTM.','THIS IS NOT']
 
     cv = CountVectorizer(
