@@ -51,17 +51,16 @@ def test_compute_class_weight_dict():
     # return them.
     assert_array_almost_equal(np.asarray([1.0, 2.0, 3.0]), cw)
 
-    # When a class weight is specified that isn't in classes, a ValueError
-    # should get raised
-    msg = "Class label 4 not present."
-    class_weights = {0: 1.0, 1: 2.0, 2: 3.0, 4: 1.5}
-    with pytest.raises(ValueError, match=msg):
-        compute_class_weight(class_weights, classes=classes, y=y)
 
-    msg = "Class label -1 not present."
+    # When a class weight is specified that isn't in classes, those class weights
+    # should be ignored
+    class_weights = {0: 1.0, 1: 2.0, 2: 3.0, 4: 1.5}
+    cw = compute_class_weight(class_weights, classes=classes, y=y)
+    assert_array_almost_equal([1.0, 2.0, 3.0], cw)
+
     class_weights = {-1: 5.0, 0: 1.0, 1: 2.0, 2: 3.0}
-    with pytest.raises(ValueError, match=msg):
-        compute_class_weight(class_weights, classes=classes, y=y)
+    cw = compute_class_weight(class_weights, classes=classes, y=y)
+    assert_array_almost_equal([1.0, 2.0, 3.0], cw)
 
 
 def test_compute_class_weight_invariance():
@@ -262,9 +261,4 @@ def test_compute_sample_weight_more_than_32():
     indices = np.arange(50)  # use subsampling
     weight = compute_sample_weight("balanced", y, indices=indices)
     assert_array_almost_equal(weight, np.ones(y.shape[0]))
-
-def test_extra_class_weight_labels():
-    # No error if extraneous class lebels are present
-    rfc = RandomForestClassifier(class_weight={1:10, 0:1})
-    rfc.fit([[0, 0, 1], [1, 0, 1]], [0, 0])
 
