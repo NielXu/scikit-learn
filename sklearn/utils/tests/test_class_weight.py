@@ -38,7 +38,7 @@ def test_compute_class_weight_not_present():
     # https://github.com/scikit-learn/scikit-learn/issues/8312
     classes = np.array(["label_not_present"])
     y = np.array(["label_not_present"])
-    with pytest.raises(ValueError, match="Class label label_not_present not present"):
+    with pytest.raises(ValueError, match="Class labels label_not_present not present"):
         compute_class_weight({0: 1.0}, classes=classes, y=y)
 
 def test_compute_class_weight_dict():
@@ -261,4 +261,3 @@ def test_compute_sample_weight_more_than_32():
     indices = np.arange(50)  # use subsampling
     weight = compute_sample_weight("balanced", y, indices=indices)
     assert_array_almost_equal(weight, np.ones(y.shape[0]))
-

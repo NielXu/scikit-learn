@@ -58,11 +58,15 @@ def compute_class_weight(class_weight, *, classes, y):
             raise ValueError(
                 "class_weight must be dict, 'balanced', or None, got: %r" % class_weight
             )
+        unweighted = []
         for i, c in enumerate(classes):
             if c in class_weight:
                 weight[i] = class_weight[c]
             else:
-                raise ValueError("Class label {} not present.".format(c))
+                unweighted.append(c)
+
+        if unweighted and (len(classes) - len(unweighted)) != len(class_weight):
+            raise ValueError("Class labels {} not present.".format(", ".join(map(str, unweighted))))
 
     return weight
 
