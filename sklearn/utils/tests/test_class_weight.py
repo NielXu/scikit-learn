@@ -62,6 +62,18 @@ def test_compute_class_weight_dict():
     cw = compute_class_weight(class_weights, classes=classes, y=y)
     assert_array_almost_equal([1.0, 2.0, 3.0], cw)
 
+def test_extra_class_weight_dict():
+    
+    # When a class weight is specified that isn't in classes, those class weights
+    # should be ignored
+    rfc = RandomForestClassifier(class_weight={1:10, 0:1})
+    rfc.fit([[0, 0, 1], [1, 0, 1]], [0, 0])
+    assert_array_almost_equal(rfc.predict([[1,0,1]]), [0])
+
+    rfc = RandomForestClassifier(class_weight={1:10, 0:1})
+    with pytest.raises(ValueError):
+        rfc.fit([[0, 0, 1], [1, 0, 1]], [0, 2])
+
 
 def test_compute_class_weight_invariance():
     # Test that results with class_weight="balanced" is invariant wrt
