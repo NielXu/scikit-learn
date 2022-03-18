@@ -996,9 +996,8 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
 
     Notes
     -----
-    Unlike TimeSeriesSplit, the size of the training set is always the same, it
-    always equals to the window_size because of the behavior of the Sliding Window
-    algorithm. The size of the test set is dynamic and limited by `max_test_size`.
+    Unlike TimeSeriesSplit, the sizes of the training set and test set are always
+    the same because of the behavior of the Sliding Window algorithm.
     """
     def __init__(self, *, train_size=2, test_size=2, gap=0):
         self.train_size = train_size
