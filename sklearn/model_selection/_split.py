@@ -1000,9 +1000,11 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
     always equals to the window_size because of the behavior of the Sliding Window
     algorithm. The size of the test set is dynamic and limited by `max_test_size`.
     """
-    def __init__(self, window_size=3, *, max_test_size=None):
-        self.window_size = window_size
-        self.max_test_size = max_test_size or 1
+    def __init__(self, *, train_size=2, test_size=2, gap=0):
+        self.train_size = train_size
+        self.test_size = test_size
+        self.gap = gap
+        self.window_size = train_size + gap + test_size
 
     def split(self, X, y=None, groups=None):
         """Generate indices to split data into training and test set.
@@ -1029,20 +1031,31 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
         """
         X, y, groups = indexable(X, y, groups)
         n_samples = _num_samples(X)
+        train_size = self.train_size
+        test_size = self.test_size
+        gap = self.gap
+        window_size = self.window_size
+
+        if window_size > n_samples:
+            raise ValueError(
+                f"Cannot have window size={window_size} greater"
+                f" than the number of samples={n_samples}."
+            )
 
         indices = np.arange(n_samples)
+        train_starts = range(n_samples - window_size + 1);
 
-        for train_start in range(0, n_samples - self.window_size, 1):
-            test_start = train_start + self.window_size
+        for train_start in train_starts:
+            test_start = train_start + train_size + gap
             yield(
-                indices[train_start:train_start + self.window_size],
-                indices[test_start:test_start + self.max_test_size]
+                indices[train_start:train_start + train_size],
+                indices[test_start:test_start + test_size]
             )
 
     def get_n_splits(self, X=None, y=None, groups=None):
         """Returns the number of splitting iterations in the cross-validator"""
         n_samples = _num_samples(X)
-        return n_samples - self.window_size
+        return n_samples - self.window_size + 1
 
 
 class TimeSeriesSplit(_BaseKFold):
