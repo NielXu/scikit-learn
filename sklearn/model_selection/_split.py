@@ -1002,7 +1002,7 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
     always equals to the window_size because of the behavior of the Sliding Window
     algorithm. The size of the test set is dynamic and limited by `max_test_size`.
     """
-    def __init__(self, *, train_size=2, test_size=2, gap=0):
+    def __init__(self, train_size=2, test_size=2, *, gap=0):
         self.train_size = train_size
         self.test_size = test_size
         self.gap = gap
