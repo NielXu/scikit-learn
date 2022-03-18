@@ -952,7 +952,7 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
     This cross-validation object is a variation of :class:`TimeSeriesSplit`.
     It implements the Sliding Window algorithm and returns the train and test
     set without needed to specify `n_splits`. It rolls over the indices with
-    the given `window_size` and split the test set by `max_test_size`.
+    the given `window_size` and split the test set by `test_size`.
 
     Note that unlike standard cross-validation methods, successive
     training sets are supersets of those that come before them.
@@ -985,10 +985,10 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
     TRAIN: [0 1] TEST: [2 3]
     TRAIN: [1 2] TEST: [3 4]
     TRAIN: [2 3] TEST: [4 5]
-    >>> # Change max_test_size to 3
+    >>> # Change test_size to 3
     >>> X = np.array([[1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4]])
     >>> y = np.array([1, 2, 3, 4, 5, 6])
-    >>> tscv = TimeSeriesSlidingWindow(max_test_size=3)
+    >>> tscv = TimeSeriesSlidingWindow(test_size=3)
     >>> for train_index, test_index in tscv.split(X):
     ...    print("TRAIN:", train_index, "TEST:", test_index)
     ...    X_train, X_test = X[train_index], X[test_index]
@@ -1041,7 +1041,7 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
             raise ValueError(
                 f"Training size must be at least one"
             )
-        
+
         if test_size < 1:
             raise ValueError(
                 f"Testing size must be at least one"
