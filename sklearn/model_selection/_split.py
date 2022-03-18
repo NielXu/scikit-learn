@@ -959,12 +959,15 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
 
     Parameters
     ----------
-    window_size : int, default=3
-        The sliding window size. Must be at least 1.
+    train_size : int, default=2
+        The size of the training set. Must be at least 1.
 
-    max_test_size : int, default=None
-        Maximum size for a single test set. If not specified, the default
-        value is 1.
+    test_size : int, default=2
+        The size of the testing set. Must be at least 1.
+
+    gap : int, default=0
+        Number of samples to exclude from the end of each train set before
+        the test set.
 
     Examples
     --------
@@ -974,14 +977,14 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
     >>> y = np.array([1, 2, 3, 4, 5, 6])
     >>> tscv = TimeSeriesSlidingWindow()
     >>> print(tscv)
-    TimeSeriesSlidingWindow(max_test_size=1, window_size=3)
+    TimeSeriesSlidingWindow(gap=1, test_size=2, train_size=2)
     >>> for train_index, test_index in tscv.split(X):
     ...     print("TRAIN:", train_index, "TEST:", test_index)
     ...     X_train, X_test = X[train_index], X[test_index]
     ...     y_train, y_test = y[train_index], y[test_index]
-    TRAIN: [0 1 2] TEST: [3]
-    TRAIN: [1 2 3] TEST: [4]
-    TRAIN: [2 3 4] TEST: [5]
+    TRAIN: [0 1] TEST: [2 3]
+    TRAIN: [1 2] TEST: [3 4]
+    TRAIN: [2 3] TEST: [4 5]
     >>> # Change max_test_size to 3
     >>> X = np.array([[1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4]])
     >>> y = np.array([1, 2, 3, 4, 5, 6])
@@ -990,9 +993,8 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
     ...    print("TRAIN:", train_index, "TEST:", test_index)
     ...    X_train, X_test = X[train_index], X[test_index]
     ...    y_train, y_test = y[train_index], y[test_index]
-    TRAIN: [0 1 2] TEST: [3 4 5]
-    TRAIN: [1 2 3] TEST: [4 5]
-    TRAIN: [2 3 4] TEST: [5]
+    TRAIN: [0 1] TEST: [2 3 4]
+    TRAIN: [1 2] TEST: [3 4 5]
 
     Notes
     -----
@@ -1035,6 +1037,16 @@ class TimeSeriesSlidingWindow(BaseCrossValidator):
         test_size = self.test_size
         gap = self.gap
         window_size = self.window_size
+
+        if train_size < 1:
+            raise ValueError(
+                f"Training size must be at least one"
+            )
+        
+        if test_size < 1:
+            raise ValueError(
+                f"Testing size must be at least one"
+            )
 
         if window_size > n_samples:
             raise ValueError(
