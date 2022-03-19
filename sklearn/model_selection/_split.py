@@ -941,6 +941,134 @@ class StratifiedGroupKFold(_BaseKFold):
         return best_fold
 
 
+class TimeSeriesSlidingWindow(BaseCrossValidator):
+    """Time Series sliding window
+
+    Provides train/test indices to split time series data samples
+    that are observed at fixed time intervals, in train/test sets.
+    In each split, test indices must be higher than before, and thus shuffling
+    in cross validator is inappropriate.
+
+    This cross-validation object is a variation of :class:`TimeSeriesSplit`.
+    It implements the Sliding Window algorithm and returns the train and test
+    set without needed to specify `n_splits`. It rolls over the indices with
+    the given `window_size` and split the test set by `test_size`.
+
+    Note that unlike standard cross-validation methods, successive
+    training sets are supersets of those that come before them.
+
+    Parameters
+    ----------
+    train_size : int, default=2
+        The size of the training set. Must be at least 1.
+
+    test_size : int, default=2
+        The size of the testing set. Must be at least 1.
+
+    gap : int, default=0
+        Number of samples to exclude from the end of each train set before
+        the test set.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.model_selection import TimeSeriesSlidingWindow
+    >>> X = np.array([[1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4]])
+    >>> y = np.array([1, 2, 3, 4, 5, 6])
+    >>> tscv = TimeSeriesSlidingWindow()
+    >>> print(tscv)
+    TimeSeriesSlidingWindow(gap=1, test_size=2, train_size=2)
+    >>> for train_index, test_index in tscv.split(X):
+    ...     print("TRAIN:", train_index, "TEST:", test_index)
+    ...     X_train, X_test = X[train_index], X[test_index]
+    ...     y_train, y_test = y[train_index], y[test_index]
+    TRAIN: [0 1] TEST: [2 3]
+    TRAIN: [1 2] TEST: [3 4]
+    TRAIN: [2 3] TEST: [4 5]
+    >>> # Change test_size to 3
+    >>> X = np.array([[1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4]])
+    >>> y = np.array([1, 2, 3, 4, 5, 6])
+    >>> tscv = TimeSeriesSlidingWindow(test_size=3)
+    >>> for train_index, test_index in tscv.split(X):
+    ...    print("TRAIN:", train_index, "TEST:", test_index)
+    ...    X_train, X_test = X[train_index], X[test_index]
+    ...    y_train, y_test = y[train_index], y[test_index]
+    TRAIN: [0 1] TEST: [2 3 4]
+    TRAIN: [1 2] TEST: [3 4 5]
+
+    Notes
+    -----
+    Unlike TimeSeriesSplit, the sizes of the training set and test set are always
+    the same because of the behavior of the Sliding Window algorithm.
+    """
+    def __init__(self, train_size=2, test_size=2, *, gap=0):
+        self.train_size = train_size
+        self.test_size = test_size
+        self.gap = gap
+        self.window_size = train_size + gap + test_size
+
+    def split(self, X, y=None, groups=None):
+        """Generate indices to split data into training and test set.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data, where `n_samples` is the number of samples
+            and `n_features` is the number of features.
+
+        y : array-like of shape (n_samples,)
+            Always ignored, exists for compatibility.
+
+        groups : array-like of shape (n_samples,)
+            Always ignored, exists for compatibility.
+
+        Yields
+        ------
+        train : ndarray
+            The training set indices for that split.
+
+        test : ndarray
+            The testing set indices for that split.
+        """
+        X, y, groups = indexable(X, y, groups)
+        n_samples = _num_samples(X)
+        train_size = self.train_size
+        test_size = self.test_size
+        gap = self.gap
+        window_size = self.window_size
+
+        if train_size < 1:
+            raise ValueError(
+                f"Training size must be at least one"
+            )
+
+        if test_size < 1:
+            raise ValueError(
+                f"Testing size must be at least one"
+            )
+
+        if window_size > n_samples:
+            raise ValueError(
+                f"Cannot have window size={window_size} greater"
+                f" than the number of samples={n_samples}."
+            )
+
+        indices = np.arange(n_samples)
+        train_starts = range(n_samples - window_size + 1);
+
+        for train_start in train_starts:
+            test_start = train_start + train_size + gap
+            yield(
+                indices[train_start:train_start + train_size],
+                indices[test_start:test_start + test_size]
+            )
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        """Returns the number of splitting iterations in the cross-validator"""
+        n_samples = _num_samples(X)
+        return n_samples - self.window_size + 1
+
+
 class TimeSeriesSplit(_BaseKFold):
     """Time Series cross-validator
 
