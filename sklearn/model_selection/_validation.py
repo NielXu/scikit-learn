@@ -60,6 +60,7 @@ def cross_validate(
     return_train_score=False,
     return_estimator=False,
     error_score=np.nan,
+    handle_errors=False,
 ):
     """Evaluate metric(s) by cross-validation and also record fit/score times.
 
@@ -176,6 +177,12 @@ def cross_validate(
 
         .. versionadded:: 0.20
 
+    handle_errors : bool, default=False
+        Whether or not to handle errors raised by the scorers. The default behavior is
+        all the values will be set to `error_score` when an error raised during the
+        scoring process. It might be unexpected if `scoring` is a list. Set it to True
+        will allow the scoring continue even one of them raised an error.
+
     Returns
     -------
     scores : dict of float arrays of shape (n_splits,)
@@ -279,6 +286,7 @@ def cross_validate(
             return_times=True,
             return_estimator=return_estimator,
             error_score=error_score,
+            handle_errors=handle_errors,
         )
         for train, test in cv.split(X, y, groups)
     )
@@ -547,6 +555,7 @@ def _fit_and_score(
     split_progress=None,
     candidate_progress=None,
     error_score=np.nan,
+    handle_errors=False,
 ):
 
     """Fit estimator and compute scores for a given dataset split.
@@ -614,6 +623,12 @@ def _fit_and_score(
 
     return_estimator : bool, default=False
         Whether to return the fitted estimator.
+
+    handle_errors : bool, default=False
+        Whether or not to handle errors raised by the scorers. The default behavior is
+        all the values will be set to `error_score` when an error raised during the
+        scoring process. It might be unexpected if `scoring` is a list. Set it to True
+        will allow the scoring continue even one of them raised an error.
 
     Returns
     -------
@@ -706,10 +721,10 @@ def _fit_and_score(
         result["fit_error"] = None
 
         fit_time = time.time() - start_time
-        test_scores = _score(estimator, X_test, y_test, scorer, error_score)
+        test_scores = _score(estimator, X_test, y_test, scorer, error_score, handle_errors)
         score_time = time.time() - start_time - fit_time
         if return_train_score:
-            train_scores = _score(estimator, X_train, y_train, scorer, error_score)
+            train_scores = _score(estimator, X_train, y_train, scorer, error_score, handle_errors)
 
     if verbose > 1:
         total_time = score_time + fit_time
@@ -751,7 +766,7 @@ def _fit_and_score(
     return result
 
 
-def _score(estimator, X_test, y_test, scorer, error_score="raise"):
+def _score(estimator, X_test, y_test, scorer, error_score="raise", handle_errors=False):
     """Compute the score(s) of an estimator on a given test set.
 
     Will return a dict of floats if `scorer` is a dict, otherwise a single
@@ -763,9 +778,31 @@ def _score(estimator, X_test, y_test, scorer, error_score="raise"):
 
     try:
         if y_test is None:
-            scores = scorer(estimator, X_test)
+            if isinstance(scorer, _MultimetricScorer):
+                result = scorer(estimator, X_test, handle_errors=handle_errors)
+            else:
+                result = scorer(estimator, X_test)
         else:
-            scores = scorer(estimator, X_test, y_test)
+            if isinstance(scorer, _MultimetricScorer):
+                result = scorer(estimator, X_test, y_test, handle_errors=handle_errors)
+            else:
+                result = scorer(estimator, X_test, y_test)
+        # First index is the actual scores
+        if handle_errors:
+            scores, errors = result
+            for err in errors:
+                if isinstance(scorer, _MultimetricScorer):
+                    scores[err['name']] = error_score
+                else:
+                    scores = error_score
+                warnings.warn(
+                    "Scoring failed. The score on this train-test partition for "
+                    f"these parameters will be set to {error_score}. Details: \n"
+                    f"{format_exc()}",
+                    UserWarning,
+                )
+        else:
+            scores = result
     except Exception:
         if error_score == "raise":
             raise
