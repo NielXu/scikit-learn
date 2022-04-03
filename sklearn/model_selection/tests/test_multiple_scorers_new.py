@@ -94,5 +94,129 @@ def test_handle_errors_False():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
+def test_without_scoring_handle_errors_False():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = {'fit_time': np.array([0.00049853, 0.00031328, 0.00029945, 0.0002985 , 0.00029778]), 
+                'score_time': np.array([0.00023556, 0.00020146, 0.00020027, 0.00019979, 0.00019908]),
+                'test_score': np.array([0.98185992, 0.98455702, 0.98816009, 0.98852095, 0.99761839])}
+
+    actual = cross_validate(linear_model.LinearRegression(),X,y, handle_errors = False)
+
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_without_scoring_handle_errors_True():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = {'fit_time': np.array([0.00049853, 0.00031328, 0.00029945, 0.0002985 , 0.00029778]), 
+                'score_time': np.array([0.00023556, 0.00020146, 0.00020027, 0.00019979, 0.00019908]),
+                'test_score': np.array([0.98185992, 0.98455702, 0.98816009, 0.98852095, 0.99761839])}
+
+    actual = cross_validate(linear_model.LinearRegression(),X,y, handle_errors = True)
+
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_scoring_string_r2():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = cross_validate(linear_model.LinearRegression(), X,y,scoring = ("r2"), handle_errors=False)
+
+    actual = cross_validate(linear_model.LinearRegression(), X,y,scoring = "r2", handle_errors=False)
+
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_scoring_string_neg_median_absolute_error():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = cross_validate(linear_model.LinearRegression(), X,y,scoring = ("neg_median_absolute_error"), handle_errors=False)
+
+    actual = cross_validate(linear_model.LinearRegression(), X,y,scoring = "neg_median_absolute_error", handle_errors=False)
+    
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_scoring_string_neg_mean_absolute_error():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = cross_validate(linear_model.LinearRegression(), X,y,scoring = ("neg_mean_absolute_error"), handle_errors=False)
+
+    actual = cross_validate(linear_model.LinearRegression(), X,y,scoring = "neg_mean_absolute_error", handle_errors=False)
+    
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_scoring_string_neg_mean_absolute_percentage_error():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = cross_validate(linear_model.LinearRegression(), X,y,scoring = ("neg_mean_absolute_percentage_error"), handle_errors=False)
+
+    actual = cross_validate(linear_model.LinearRegression(), X,y,scoring = "neg_mean_absolute_percentage_error", handle_errors=False)
+
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_scoring_string_neg_mean_squared_log_error():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = cross_validate(linear_model.LinearRegression(), X,y,scoring = ("neg_mean_squared_log_error"), handle_errors=False)
+
+    actual = cross_validate(linear_model.LinearRegression(), X,y,scoring = "neg_mean_squared_log_error", handle_errors=False)
+
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_scoring_string_neg_root_mean_squared_error():
+    X, y = datasets.make_regression(
+        n_samples=100,
+        n_features=2,
+        n_informative=1,
+        noise=10,
+        random_state=0,
+    )
+    expected = cross_validate(linear_model.LinearRegression(), X,y,scoring = ("neg_root_mean_squared_error"), handle_errors=False)
+
+    actual = cross_validate(linear_model.LinearRegression(), X,y,scoring = "neg_root_mean_squared_error", handle_errors=False)
+
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
 if __name__ == '__main__':
     pytest.main()
