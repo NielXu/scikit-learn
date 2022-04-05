@@ -98,14 +98,26 @@ class _MultimetricScorer:
         scores = {}
         cache = {} if self._use_cache(estimator) else None
         cached_call = partial(_cached_call, cache)
+        errors = []
+        handle_errors = kwargs.pop("handle_errors", False)
 
         for name, scorer in self._scorers.items():
-            if isinstance(scorer, _BaseScorer):
-                score = scorer._score(cached_call, estimator, *args, **kwargs)
-            else:
-                score = scorer(estimator, *args, **kwargs)
-            scores[name] = score
-        return scores
+            try:
+                if isinstance(scorer, _BaseScorer):
+                    score = scorer._score(cached_call, estimator, *args, **kwargs)
+                else:
+                    score = scorer(estimator, *args, **kwargs)
+                scores[name] = score
+            except Exception as e:
+                if handle_errors:
+                    errors.append({ "name": name, "scorer": scorer })
+                else:
+                    raise
+
+        if handle_errors:
+            return scores, errors
+        else:
+            return scores
 
     def _use_cache(self, estimator):
         """Return True if using a cache is beneficial.
